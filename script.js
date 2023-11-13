@@ -79,7 +79,7 @@ class App {
   #mapEvent;
 
   constructor() {
-    this.getPositon();
+    this.#getPosition();
     this.#toggleElevationField();
     this.#getLocalStorage();
 
@@ -87,7 +87,7 @@ class App {
     containerWorkouts.addEventListener('click', this.#moveToPopup.bind(this));
   }
 
-  #getPositon() {
+  #getPosition() {
     //
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -108,7 +108,7 @@ class App {
 
     this.#map = L.map('map').setView(coords, 14);
 
-    L.tileLayer('https://title.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+    L.tileLayer('https://tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(this.#map);
@@ -144,6 +144,8 @@ class App {
     };
 
     //
+    console.log(this.#mapEvent);
+
     const type = inputType.value;
     const distance = +inputDistance.value;
     const duration = +inputDuration.value;
@@ -153,7 +155,6 @@ class App {
     if (type == 'running') {
       const cadence = +inputCadence.value;
 
-      //
       if (!isValid(distance, duration, cadence)) {
         alert("Malumotlar musbat sonlar bo'lishi kerak!");
         return;
@@ -166,6 +167,7 @@ class App {
         alert("Malumotlar natural son bo'lishi kerak");
         return;
       }
+
       workout = new Cycling(distance, duration, coords, elevGain);
     }
 
@@ -198,12 +200,11 @@ class App {
           content: `${workout._type == 'running' ? '🏃🏽‍♂️' : '🚴🏻'}${
             workout.title
           }`,
-          className: `${workout._type} - popup`,
+          className: `${workout._type}-popup`,
         })
       )
       .openPopup();
   }
-
 
   #renderWorkout(workout) {
     let workoutHtml = `
@@ -221,14 +222,13 @@ class App {
             <span class="workout__value">${workout.duration}</span>
             <span class="workout__unit">min</span>
           </div>
-          </li>
         `;
 
-        if(workout._type == 'runnig') {
-            workoutHtml += `
+    if (workout._type == 'running') {
+      workoutHtml += `
             <div class="workout__details">
             <span class="workout__icon">⚡</span>
-            <span class="workout__value">${workout.pace}</span>
+            <span class="workout__value">${workout.pace.toFixed(1)}</span>
             <span class="workout__unit">min/km</span>
           </div>
           <div class="workout__details">
@@ -238,10 +238,10 @@ class App {
           </div>
         </li>
             `;
-        }
+    }
 
-        if(workout._type == 'cycling') {
-            workoutHtml += `
+    if (workout._type == 'cycling') {
+      workoutHtml += `
             <div class="workout__details">
             <span class="workout__icon">⚡</span>
             <span class="workout__value">${workout.speed}</span>
@@ -254,18 +254,20 @@ class App {
           </div>
         </li> 
             `;
-        }
-        form.insertAdjacentElement('afterend', workoutHtml);
+    }
+    form.insertAdjacentHTML('afterend', workoutHtml);
   }
+  // insertAdjacentElement
 
   //////////
   #hideForm() {
+    console.log(212);
     //
-    inputDistance.value = 
-    inputDuration.value = 
-    inputCadence.value = 
-    inputElevation.value = 
-    '';
+    inputDistance.value =
+      inputDuration.value =
+      inputCadence.value =
+      inputElevation.value =
+        '';
 
     form.style.display = 'none';
     form.classList.add('hidden');
@@ -276,18 +278,17 @@ class App {
   #moveToPopup(e) {
     const workoutEl = e.target.closest('.workout');
 
-    if(!workoutEl) return;
+    if (!workoutEl) return;
 
     const findWorkout = this.#workouts.find(
-        el => el._id == workoutEl.dataset.id
+      el => el._id == workoutEl.dataset.id
     );
 
-
     this.#map.setView(findWorkout.coords, 16, {
-        animate: true,
-        pan: {
-            duration: 1,
-        },
+      animate: true,
+      pan: {
+        duration: 1,
+      },
     });
   }
 
@@ -298,7 +299,7 @@ class App {
   #getLocalStorage() {
     const data = JSON.parse(localStorage.getItem('workouts'));
 
-    if(!data) return;
+    if (!data) return;
 
     this.#workouts = data;
 
